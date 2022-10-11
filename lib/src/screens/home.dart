@@ -1,287 +1,724 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'calculation.dart';
 import 'package:rxdart/rxdart.dart';
+import 'dart:math' as Math;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text('ホーム'),
+    return MaterialApp(
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
         ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            NumberField(),
-            Keyboard(),
-          ],
-        )); //returnがついているものにだけ最後;をつける
+        home: CaluculationPage(title: 'calc app'));
   }
 }
 
-//表示
-class NumberField extends StatefulWidget {
-  _NumberFieldState createState() => _NumberFieldState();
+class CaluculationPage extends StatefulWidget {
+  const CaluculationPage({Key? key, required this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  _CaluculationPage createState() => _CaluculationPage();
 }
 
-class _NumberFieldState extends State<NumberField> {
-  String _expression = "";
+enum CALC_TYPE { add, sub, multi, div, clear, percent }
 
-  void _UpdateNumber(String letter) {
+class _CaluculationPage extends State<CaluculationPage> {
+  double _setNumber = 0; //計算用　初期値
+  double _disNumber = 0; //表示用　初期値
+  double _firstNum = 0; //最初に入れた数値　初期値
+  double _persentNumber = 0;
+  late CALC_TYPE _calcType;
+  int _displayPow = 0;
+  bool _decimalFlg = false;
+
+  void _setNum(double num) {
+    _displayPow = 0;
+    if (_disNumber == _setNumber) {
+      if (10000000000 > _disNumber) {
+        setState(() {
+          if (!_decimalFlg)
+            _disNumber = _disNumber * 10 + num;
+          else {
+            int count = 1;
+            for (int i = 0;
+                _disNumber * Math.pow(10, i) !=
+                    (_disNumber * Math.pow(10, i)).ceil();
+                i++) {
+              count++;
+            }
+            _disNumber = double.parse((_disNumber + (num / Math.pow(10, count)))
+                .toStringAsFixed(count));
+            _checkDecimal();
+          }
+          _setNumber = _disNumber;
+        });
+      }
+    } else {
+      setState(() {
+        _disNumber = num;
+        _setNumber = _disNumber;
+        _calcType = null as CALC_TYPE;
+      });
+    }
+  }
+
+//ボタン初期値
+  void _calcBtmPressed(CALC_TYPE type) {
+    _setNumber = _disNumber;
+    _firstNum = _setNumber;
+    _setNumber = 0;
+    _disNumber = 0;
+    _calcType = type;
+  }
+
+//calcにnullを戻す
+  void _calcClear() {
     setState(() {
-      if (letter == 'C')
-        _expression = "";
-      else if (letter == '=') {
-        _expression = '';
-        var ans = Calculator.Execute();
-        controller.sink.add(ans);
-      } else if (letter == 'e') {
-        _expression = 'Error';
-      } else
-        _expression += letter;
+      _calcType = null as CALC_TYPE;
+    });
+  }
+
+//足し算
+  void _calcAdd() {
+    setState(() {
+      _disNumber = _firstNum + _setNumber;
+      _checkDecimal();
+      _firstNum = _disNumber;
+    });
+  }
+
+//引き算
+  void _calcSub() {
+    setState(() {
+      _disNumber = _firstNum - _setNumber;
+      _checkDecimal();
+      _firstNum = _disNumber;
+    });
+  }
+
+//掛け算
+  void _calcMulti() {
+    setState(() {
+      _disNumber = _firstNum * _setNumber;
+      _checkDecimal();
+      _firstNum = _disNumber;
+    });
+  }
+
+//割り算
+  void _calcDiv() {
+    setState(() {
+      _disNumber = _firstNum / _setNumber;
+      _checkDecimal();
+      _firstNum = _disNumber;
+    });
+  }
+
+  void _calcPercent() {
+    setState(() {
+      _persentNumber = _firstNum / 10;
+      _disNumber = _firstNum + _persentNumber;
+      _checkDecimal();
+      _firstNum = _disNumber;
+    });
+  }
+
+//マイナス表記
+  void _invertedNum() {
+    setState(() {
+      _disNumber = -_disNumber;
+      _setNumber = -_setNumber;
+    });
+  }
+
+//小数点の処理
+  void _checkDecimal() {
+    double checkNum = _disNumber;
+    if (100000000000 < _disNumber || _disNumber == _disNumber.toInt()) {
+      for (int i = 0; 100000000000 < _disNumber / Math.pow(10, i); i++) {
+        _displayPow = i;
+        checkNum = checkNum / 10;
+      }
+      _disNumber = checkNum.floor().toDouble();
+    } else {
+      int count = 0;
+      for (int i = 0; 1 < _disNumber / Math.pow(10, i); i++) {
+        count = i;
+      }
+      int displayCount = 10 - count;
+      _disNumber = double.parse(_disNumber.toStringAsFixed(displayCount));
+    }
+  }
+
+//Cを押した時の処理
+  void _clearNum() {
+    setState(() {
+      _setNumber = 0;
+      _disNumber = 0;
+      _firstNum = 0;
+      _calcType = CALC_TYPE.clear;
+      _displayPow = 0;
+      _decimalFlg = false;
+    });
+  }
+
+  void _clearEntryNum() {
+    setState(() {
+      _setNumber = 0;
+      _disNumber = 0;
+      _displayPow = 0;
+      _decimalFlg = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      flex: 1,
-      child: Align(
-        alignment: Alignment.center,
-        child: Text(
-          _expression,
-          style: TextStyle(
-            fontSize: 64.0,
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          Container(
+            height: 20,
+            child: _displayPow > 0
+                ? Text(
+                    "10^${_displayPow.toString()}",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  )
+                : Container(),
           ),
-        ),
+          Text(
+            _disNumber == _disNumber.toInt()
+                ? _disNumber.toInt().toString()
+                : _disNumber.toString(),
+            style: TextStyle(
+              fontSize: 60,
+            ),
+          ),
+          Expanded(
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _calcBtmPressed(CALC_TYPE.percent);
+                            },
+                            child: Text(
+                              "￥",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _clearEntryNum();
+                            },
+                            child: Text(
+                              "CE",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _clearNum();
+                              _calcBtmPressed(CALC_TYPE.clear);
+                            },
+                            child: Text(
+                              "C",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _calcBtmPressed(CALC_TYPE.div);
+                            },
+                            child: Text(
+                              "÷",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(7);
+                            },
+                            child: Text(
+                              "7",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(8);
+                            },
+                            child: Text(
+                              "8",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(9);
+                            },
+                            child: Text(
+                              "9",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _calcBtmPressed(CALC_TYPE.multi);
+                            },
+                            child: Text(
+                              "×",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(4);
+                            },
+                            child: Text(
+                              "4",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(5);
+                            },
+                            child: Text(
+                              "5",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(6);
+                            },
+                            child: Text(
+                              "6",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _calcBtmPressed(CALC_TYPE.sub);
+                            },
+                            child: Text(
+                              "-",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(1);
+                            },
+                            child: Text(
+                              "1",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(2);
+                            },
+                            child: Text(
+                              "2",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(3);
+                            },
+                            child: Text(
+                              "3",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _calcBtmPressed(CALC_TYPE.add);
+                            },
+                            child: Text(
+                              "+",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _invertedNum();
+                            },
+                            child: Text(
+                              "+/-",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _setNum(0);
+                            },
+                            child: Text(
+                              "0",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _decimalFlg = true;
+                            },
+                            child: Text(
+                              ".",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              switch (_calcType) {
+                                case CALC_TYPE.add:
+                                  _calcAdd();
+                                  break;
+                                case CALC_TYPE.sub:
+                                  _calcSub();
+                                  break;
+                                case CALC_TYPE.multi:
+                                  _calcMulti();
+                                  break;
+                                case CALC_TYPE.div:
+                                  _calcDiv();
+                                  break;
+                                case CALC_TYPE.clear:
+                                  _calcClear();
+                                  break;
+                                case CALC_TYPE.percent:
+                                  _calcPercent();
+                                  break;
+                                default:
+                                  break;
+                              }
+                            },
+                            child: Text(
+                              "=",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
-
-  static final controller = BehaviorSubject<String>();
-  @override
-  void initState() {
-    controller.stream.listen((event) => _UpdateNumber(event));
-    controller.stream.listen((event) => Calculator.GetKey(event));
-  }
 }
+// //表示
+// class NumberField extends StatefulWidget {
+//   _NumberFieldState createState() => _NumberFieldState();
+// }
 
-//キーボード
-class Keyboard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-        flex: 5,
-        child: Center(
-            child: Container(
-          color: const Color(0xff87cefa),
-          child: GridView.count(
-            crossAxisCount: 4,
-            mainAxisSpacing: 3.0,
-            crossAxisSpacing: 3.0,
-            children: [
-              '%',
-              'π',
-              '￥',
-              '',
-              '7',
-              '8',
-              '9',
-              '÷',
-              '4',
-              '5',
-              '6',
-              '×',
-              '1',
-              '2',
-              '3',
-              '-',
-              'C',
-              '0',
-              '=',
-              '+',
-            ].map((key) {
-              return GridTile(
-                child: Button(key),
-              );
-            }).toList(),
-          ),
-        )));
-  }
-}
+// class _NumberFieldState extends State<NumberField> {
+//   String _expression = "";
 
-class Button extends StatelessWidget {
-  final _key;
-  Button(this._key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        child: ElevatedButton(
-      onPressed: () {
-        _NumberFieldState.controller.sink.add(_key);
-      },
-      child: Center(
-        child: Text(
-          _key,
-          style: TextStyle(fontSize: 46.0),
-        ),
-      ),
-    ));
-  }
-}
-
-// import 'package:flutter/material.dart';
-// import 'calculation.dart';
-
-// const appName = 'シンプル電卓';
-
-// class CalculatorPage extends StatelessWidget {
-//   const CalculatorPage({Key? key}) : super(key: key);
+//   void _UpdateNumber(String letter) {
+//     setState(() {
+//       if (letter == 'C')
+//         _expression = "";
+//       else if (letter == '=') {
+//         _expression = '';
+//         var ans = Calculator.Execute('=');
+//         controller.sink.add(ans);
+//       } else if (letter == '￥') {
+//         _expression = '';
+//         var ans = Calculator.Execute('￥');
+//         controller.sink.add(ans);
+//       } else if (letter == 'π') {
+//         _expression = '';
+//         var ans = Calculator.Execute('π');
+//         controller.sink.add(ans);
+//       } else if (letter == 'e') {
+//         _expression = 'Error';
+//       } else
+//         _expression += letter;
+//     });
+//   }
 
 //   @override
 //   Widget build(BuildContext context) {
-//     return new Scaffold(
-//       body: new Column(
-//         children: [
-//           new Display(),
-//           new Keyboard(),
-//         ],
+//     return Expanded(
+//       flex: 1,
+//       child: Align(
+//         alignment: Alignment.center,
+//         child: Text(
+//           _expression,
+//           style: TextStyle(
+//             fontSize: 64.0,
+//           ),
+//         ),
 //       ),
 //     );
 //   }
-// }
 
-// var _displayState = new DisplayState();
-
-// class Display extends StatefulWidget {
+//   static final controller = BehaviorSubject<String>();
 //   @override
-//   State createState() {
-//     return _displayState;
+//   void initState() {
+//     controller.stream.listen((event) => _UpdateNumber(event));
+//     controller.stream.listen((event) => Calculator.GetKey(event));
 //   }
 // }
 
-// class DisplayState extends State {
-//   var _expression = '';
-//   var _result = '';
-
-//   @override
-//   Widget build(BuildContext context) {
-//     var views = [
-//       new Expanded(
-//           flex: 1,
-//           child: new Row(
-//             children: [
-//               new Expanded(
-//                   child: new Text(
-//                 _expression,
-//                 textAlign: TextAlign.right,
-//                 style: new TextStyle(
-//                   fontSize: 40.0,
-//                   color: Colors.white,
-//                 ),
-//               ))
-//             ],
-//           )),
-//     ];
-
-//     if (_result.isNotEmpty) {
-//       views.add(
-//         new Expanded(
-//             flex: 1,
-//             child: new Row(
-//               children: [
-//                 new Expanded(
-//                     child: new Text(
-//                   _result,
-//                   textAlign: TextAlign.right,
-//                   style: new TextStyle(
-//                     fontSize: 40.0,
-//                     color: Colors.white,
-//                   ),
-//                 ))
-//               ],
-//             )),
-//       );
-//     }
-
-//     return new Expanded(
-//         flex: 2,
-//         child: new Container(
-//           color: Theme.of(context).primaryColor,
-//           padding: const EdgeInsets.all(16.0),
-//           child: new Column(
-//             children: views,
-//           ),
-//         ));
-//   }
-// }
-
-// void _addKey(String key) {
-//   var _expr = _displayState._expression;
-//   var _result = '';
-//   if (_displayState._result.isNotEmpty) {
-//     _expr = '';
-//     _result = '';
-//   }
-
-//   if (operators.contains(key)) {
-//     // Handle as an operator
-//     if (_expr.length > 0 && operators.contains(_expr[_expr.length - 1])) {
-//       _expr = _expr.substring(0, _expr.length - 1);
-//     }
-//     _expr += key;
-//   } else if (digits.contains(key)) {
-//     // Handle as an operand
-//     _expr += key;
-//   } else if (key == 'C') {
-//     // Delete last character
-//     if (_expr.length > 0) {
-//       _expr = _expr.substring(0, _expr.length - 1);
-//     }
-//   } else if (key == '=') {
-//     try {
-//       var parser = const Parser();
-//       _result = parser.parseExpression(_expr).toString();
-//     } on Error {
-//       _result = 'Error';
-//     }
-//   }
-//   // ignore: invalid_use_of_protected_member
-//   _displayState.setState(() {
-//     _displayState._expression = _expr;
-//     _displayState._result = _result;
-//   });
-// }
-
+// //キーボード
 // class Keyboard extends StatelessWidget {
 //   @override
 //   Widget build(BuildContext context) {
-//     return new Expanded(
-//         flex: 4,
-//         child: new Center(
-//             child: new AspectRatio(
-//           aspectRatio: 1.0, // To center the GridView
-//           child: new GridView.count(
+//     return Expanded(
+//         flex: 5,
+//         child: Center(
+//             child: Container(
+//           color: const Color(0xff87cefa),
+//           child: GridView.count(
 //             crossAxisCount: 4,
-//             childAspectRatio: 1.0,
-//             padding: const EdgeInsets.all(4.0),
-//             mainAxisSpacing: 4.0,
-//             crossAxisSpacing: 4.0,
+//             mainAxisSpacing: 3.0,
+//             crossAxisSpacing: 3.0,
 //             children: [
-//               // @formatter:off
-//               '7', '8', '9', '/',
-//               '4', '5', '6', '*',
-//               '1', '2', '3', '-',
-//               'C', '0', '=', '+',
-//               // @formatter:on
+//               '%',
+//               'π',
+//               '￥',
+//               '',
+//               '7',
+//               '8',
+//               '9',
+//               '÷',
+//               '4',
+//               '5',
+//               '6',
+//               '×',
+//               '1',
+//               '2',
+//               '3',
+//               '-',
+//               'C',
+//               '0',
+//               '=',
+//               '+',
 //             ].map((key) {
-//               return new GridTile(
-//                 child: new KeyboardKey(key),
+//               return GridTile(
+//                 child: Button(key),
 //               );
 //             }).toList(),
 //           ),
@@ -289,26 +726,23 @@ class Button extends StatelessWidget {
 //   }
 // }
 
-// class KeyboardKey extends StatelessWidget {
-//   KeyboardKey(this._keyValue);
-
-//   final _keyValue;
+// class Button extends StatelessWidget {
+//   final _key;
+//   Button(this._key);
 
 //   @override
 //   Widget build(BuildContext context) {
-//     return new ElevatedButton(
-//       child: new Text(
-//         _keyValue,
-//         style: const TextStyle(
-//           fontWeight: FontWeight.bold,
-//           fontSize: 26.0,
-//           color: Colors.black,
+//     return Container(
+//         child: ElevatedButton(
+//       onPressed: () {
+//         _NumberFieldState.controller.sink.add(_key);
+//       },
+//       child: Center(
+//         child: Text(
+//           _key,
+//           style: TextStyle(fontSize: 46.0),
 //         ),
 //       ),
-//       // Color: Theme.of(context).scaffoldBackgroundColor,
-//       onPressed: () {
-//         _addKey(_keyValue);
-//       },
-//     );
+//     ));
 //   }
 // }
