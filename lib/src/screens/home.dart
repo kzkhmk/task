@@ -1,7 +1,4 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:rxdart/rxdart.dart';
 import 'dart:math' as Math;
 
 class HomeScreen extends StatelessWidget {
@@ -25,7 +22,7 @@ class CaluculationPage extends StatefulWidget {
   _CaluculationPage createState() => _CaluculationPage();
 }
 
-enum CALC_TYPE { add, sub, multi, div, clear, percent }
+enum CALC_TYPE { add, sub, multi, div, clear, percent, pi, Square }
 
 class _CaluculationPage extends State<CaluculationPage> {
   double _setNumber = 0; //計算用　初期値
@@ -119,10 +116,29 @@ class _CaluculationPage extends State<CaluculationPage> {
     });
   }
 
+//税込（１０％）計算
   void _calcPercent() {
     setState(() {
       _persentNumber = _firstNum / 10;
       _disNumber = _firstNum + _persentNumber;
+      _checkDecimal();
+      _firstNum = _disNumber;
+    });
+  }
+
+//円周率計算
+  void _PiNumber() {
+    setState(() {
+      _disNumber = _firstNum * Math.pi;
+      _checkDecimal();
+      _firstNum = _disNumber;
+    });
+  }
+
+//倍数計算
+  void _SquareNumber() {
+    setState(() {
+      _disNumber = _firstNum * _firstNum;
       _checkDecimal();
       _firstNum = _disNumber;
     });
@@ -182,451 +198,760 @@ class _CaluculationPage extends State<CaluculationPage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: <Widget>[
-          Container(
-            height: 20,
-            child: _displayPow > 0
-                ? Text(
-                    "10^${_displayPow.toString()}",
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  )
-                : Container(),
-          ),
-          Text(
-            _disNumber == _disNumber.toInt()
-                ? _disNumber.toInt().toString()
-                : _disNumber.toString(),
+      body: LayoutBuilder(builder: (context, constraints) {
+        return constraints.maxWidth < constraints.maxHeight
+            ? _NormalWidget(context, false)
+            : _NormalWidget(context, true);
+      }),
+    );
+  }
+
+  Widget _numWidget(BuildContext context, double num) {
+    return Expanded(
+      child: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            _setNum(num);
+          },
+          child: Text(
+            num.toInt().toString(),
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 60,
+              fontSize: 40,
             ),
           ),
-          Expanded(
-            child: Column(
-              children: <Widget>[
-                Expanded(
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _calcBtmPressed(CALC_TYPE.percent);
-                            },
-                            child: Text(
-                              "￥",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _clearEntryNum();
-                            },
-                            child: Text(
-                              "CE",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _clearNum();
-                              _calcBtmPressed(CALC_TYPE.clear);
-                            },
-                            child: Text(
-                              "C",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _calcBtmPressed(CALC_TYPE.div);
-                            },
-                            child: Text(
-                              "÷",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(7);
-                            },
-                            child: Text(
-                              "7",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(8);
-                            },
-                            child: Text(
-                              "8",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(9);
-                            },
-                            child: Text(
-                              "9",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _calcBtmPressed(CALC_TYPE.multi);
-                            },
-                            child: Text(
-                              "×",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(4);
-                            },
-                            child: Text(
-                              "4",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(5);
-                            },
-                            child: Text(
-                              "5",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(6);
-                            },
-                            child: Text(
-                              "6",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _calcBtmPressed(CALC_TYPE.sub);
-                            },
-                            child: Text(
-                              "-",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(1);
-                            },
-                            child: Text(
-                              "1",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(2);
-                            },
-                            child: Text(
-                              "2",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(3);
-                            },
-                            child: Text(
-                              "3",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _calcBtmPressed(CALC_TYPE.add);
-                            },
-                            child: Text(
-                              "+",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _invertedNum();
-                            },
-                            child: Text(
-                              "+/-",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _setNum(0);
-                            },
-                            child: Text(
-                              "0",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _decimalFlg = true;
-                            },
-                            child: Text(
-                              ".",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              switch (_calcType) {
-                                case CALC_TYPE.add:
-                                  _calcAdd();
-                                  break;
-                                case CALC_TYPE.sub:
-                                  _calcSub();
-                                  break;
-                                case CALC_TYPE.multi:
-                                  _calcMulti();
-                                  break;
-                                case CALC_TYPE.div:
-                                  _calcDiv();
-                                  break;
-                                case CALC_TYPE.clear:
-                                  _calcClear();
-                                  break;
-                                case CALC_TYPE.percent:
-                                  _calcPercent();
-                                  break;
-                                default:
-                                  break;
-                              }
-                            },
-                            child: Text(
-                              "=",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
+
+  Widget _calcTypeWidget(
+      BuildContext context, String text, CALC_TYPE calcType) {
+    return Expanded(
+      child: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            _calcBtmPressed(calcType);
+          },
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 40,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _NormalWidget(BuildContext context, bool wide) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: <Widget>[
+        Container(
+          height: 20,
+          child: _displayPow > 0
+              ? Text(
+                  "10^${_displayPow.toString()}",
+                  style: TextStyle(
+                    fontSize: 20,
+                  ),
+                )
+              : Container(),
+        ),
+        Text(
+          _disNumber == _disNumber.toInt()
+              ? _disNumber.toInt().toString()
+              : _disNumber.toString(),
+          style: TextStyle(
+            fontSize: 60,
+          ),
+        ),
+        Expanded(
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    if (wide == true)
+                      _calcTypeWidget(context, "π", CALC_TYPE.pi),
+                    _calcTypeWidget(context, "￥", CALC_TYPE.percent),
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _clearEntryNum();
+                          },
+                          child: Text(
+                            "CE",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 40,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _clearNum();
+                            _calcBtmPressed(CALC_TYPE.clear);
+                          },
+                          child: Text(
+                            "C",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 40,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    _calcTypeWidget(context, "÷", CALC_TYPE.div),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    if (wide == true)
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _SquareNumber();
+                            },
+                            child: Text(
+                              "x2",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    _numWidget(context, 7),
+                    _numWidget(context, 8),
+                    _numWidget(context, 9),
+                    _calcTypeWidget(context, "×", CALC_TYPE.multi),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    _numWidget(context, 4),
+                    _numWidget(context, 5),
+                    _numWidget(context, 6),
+                    _calcTypeWidget(context, "-", CALC_TYPE.sub),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    _numWidget(context, 1),
+                    _numWidget(context, 2),
+                    _numWidget(context, 3),
+                    _calcTypeWidget(context, "+", CALC_TYPE.add),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _invertedNum();
+                          },
+                          child: Text(
+                            "+/-",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 40,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    _numWidget(context, 0),
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _decimalFlg = true;
+                          },
+                          child: Text(
+                            ".",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 40,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            switch (_calcType) {
+                              case CALC_TYPE.add:
+                                _calcAdd();
+                                break;
+                              case CALC_TYPE.sub:
+                                _calcSub();
+                                break;
+                              case CALC_TYPE.multi:
+                                _calcMulti();
+                                break;
+                              case CALC_TYPE.div:
+                                _calcDiv();
+                                break;
+                              case CALC_TYPE.clear:
+                                _calcClear();
+                                break;
+                              case CALC_TYPE.percent:
+                                _calcPercent();
+                                break;
+                              case CALC_TYPE.pi:
+                                _PiNumber();
+                                break;
+                              default:
+                                break;
+                            }
+                          },
+                          child: Text(
+                            "=",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 40,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
+
+//   Widget _WideWidget(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.end,
+//       children: <Widget>[
+//         Container(
+//           height: 20,
+//           child: _displayPow > 0
+//               ? Text(
+//                   "10^${_displayPow.toString()}",
+//                   style: TextStyle(
+//                     fontSize: 20,
+//                   ),
+//                 )
+//               : Container(),
+//         ),
+//         Text(
+//           _disNumber == _disNumber.toInt()
+//               ? _disNumber.toInt().toString()
+//               : _disNumber.toString(),
+//           style: TextStyle(
+//             fontSize: 60,
+//           ),
+//         ),
+//         Expanded(
+//           child: Column(
+//             children: <Widget>[
+//               Expanded(
+//                 child: Row(
+//                   children: <Widget>[
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _calcBtmPressed(CALC_TYPE.pi);
+//                           },
+//                           child: Text(
+//                             "π",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _calcBtmPressed(CALC_TYPE.percent);
+//                           },
+//                           child: Text(
+//                             "￥",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _clearEntryNum();
+//                           },
+//                           child: Text(
+//                             "CE",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _clearNum();
+//                             _calcBtmPressed(CALC_TYPE.clear);
+//                           },
+//                           child: Text(
+//                             "C",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _calcBtmPressed(CALC_TYPE.div);
+//                           },
+//                           child: Text(
+//                             "÷",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               Expanded(
+//                 child: Row(
+//                   children: <Widget>[
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _SquareNumber();
+//                           },
+//                           child: Text(
+//                             "x2",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(7);
+//                           },
+//                           child: Text(
+//                             "7",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(8);
+//                           },
+//                           child: Text(
+//                             "8",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(9);
+//                           },
+//                           child: Text(
+//                             "9",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _calcBtmPressed(CALC_TYPE.multi);
+//                           },
+//                           child: Text(
+//                             "×",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               Expanded(
+//                 child: Row(
+//                   children: <Widget>[
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(4);
+//                           },
+//                           child: Text(
+//                             "4",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(5);
+//                           },
+//                           child: Text(
+//                             "5",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(6);
+//                           },
+//                           child: Text(
+//                             "6",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _calcBtmPressed(CALC_TYPE.sub);
+//                           },
+//                           child: Text(
+//                             "-",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               Expanded(
+//                 child: Row(
+//                   children: <Widget>[
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(1);
+//                           },
+//                           child: Text(
+//                             "1",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(2);
+//                           },
+//                           child: Text(
+//                             "2",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(3);
+//                           },
+//                           child: Text(
+//                             "3",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _calcBtmPressed(CALC_TYPE.add);
+//                           },
+//                           child: Text(
+//                             "+",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               Expanded(
+//                 child: Row(
+//                   children: <Widget>[
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _invertedNum();
+//                           },
+//                           child: Text(
+//                             "+/-",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _setNum(0);
+//                           },
+//                           child: Text(
+//                             "0",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             _decimalFlg = true;
+//                           },
+//                           child: Text(
+//                             ".",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: SizedBox(
+//                         width: double.infinity,
+//                         height: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: () {
+//                             switch (_calcType) {
+//                               case CALC_TYPE.add:
+//                                 _calcAdd();
+//                                 break;
+//                               case CALC_TYPE.sub:
+//                                 _calcSub();
+//                                 break;
+//                               case CALC_TYPE.multi:
+//                                 _calcMulti();
+//                                 break;
+//                               case CALC_TYPE.div:
+//                                 _calcDiv();
+//                                 break;
+//                               case CALC_TYPE.clear:
+//                                 _calcClear();
+//                                 break;
+//                               case CALC_TYPE.percent:
+//                                 _calcPercent();
+//                                 break;
+//                               case CALC_TYPE.pi:
+//                                 _PiNumber();
+//                                 break;
+//                               case CALC_TYPE.Square:
+//                                 _SquareNumber();
+//                                 break;
+//                               default:
+//                                 break;
+//                             }
+//                           },
+//                           child: Text(
+//                             "=",
+//                             textAlign: TextAlign.center,
+//                             style: TextStyle(
+//                               fontSize: 40,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
+
 // //表示
 // class NumberField extends StatefulWidget {
 //   _NumberFieldState createState() => _NumberFieldState();
